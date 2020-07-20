@@ -17,7 +17,7 @@
 use bytes::Bytes;
 use evm::{Factory as EvmFactory, VMType};
 use std::{cell::RefCell, rc::Rc};
-use vm::{ActionParams, ConfidentialCtx, OasisVm, Schedule, Vm};
+use vm::{ssvm::Ssvm, ActionParams, ConfidentialCtx, OasisVm, Schedule, Vm};
 
 use wasm::WasmInterpreter;
 
@@ -41,7 +41,7 @@ impl VmFactory {
 				&& params.code.as_ref().map_or(false, |code| {
 					code.len() > 4 && &code[0..4] == WASM_MAGIC_NUMBER
 				}) {
-				Box::new(WasmInterpreter)
+				Box::new(Ssvm::new())
 			} else {
 				self.evm.create(&params.gas)
 			}
