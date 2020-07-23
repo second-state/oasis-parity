@@ -32,6 +32,8 @@ extern crate log;
 #[cfg(test)]
 extern crate rustc_hex;
 
+extern crate evmc_client;
+
 pub mod evm;
 pub mod interpreter;
 
