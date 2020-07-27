@@ -167,5 +167,3 @@ pub mod test_helpers;
 pub use evm::CreateContractAddress;
 pub use executive::contract_address;
 pub use types::*;
-
-extern crate evmc_client;

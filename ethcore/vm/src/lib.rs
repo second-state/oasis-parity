@@ -31,6 +31,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_json;
 extern crate elastic_array;
+extern crate evmc_client;
 
 mod action_params;
 mod call_type;
@@ -41,6 +42,7 @@ mod oasis_contract;
 mod oasis_vm;
 mod return_data;
 mod schedule;
+pub mod ssvm;
 
 pub mod tests;
 
