@@ -17,12 +17,12 @@ pub struct RuntimeContext {
 	pub gas_price: U256,
 }
 
-struct HostContext {
+struct HostContext<'a> {
 	context: RuntimeContext,
-	ext: Ext,
+	ext: &'a mut dyn Ext,
 }
 
-impl HostInterface for HostContext {
+impl HostInterface for HostContext<'_> {
 	fn account_exists(&mut self, addr: &evmc_types::Address) -> bool {
 		println!("Host: account_exists");
 		self.ext.exists(&Address::from_slice(addr)).unwrap_or(false)
@@ -154,6 +154,7 @@ impl HostInterface for HostContext {
 		gas: i64,
 		_depth: i32,
 		is_static: bool,
+		salt: &evmc_types::Bytes32,
 	) -> (Vec<u8>, i64, evmc_types::Address, evmc_types::StatusCode) {
 		println!("Host: call");
 
@@ -177,9 +178,12 @@ impl HostInterface for HostContext {
 				&U256::from(gas),
 				&U256::from(value),
 				contract_code,
-				CreateContractAddress::FromSenderAndNonce,
+				if kind == evmc_types::CallKind::EVMC_CREATE {
+					CreateContractAddress::FromSenderAndNonce
+				} else {
+					CreateContractAddress::FromSenderSaltAndCodeHash(H256::from_slice(salt))
+				},
 			);
-
 			match result {
 				ContractCreateResult::Created(address, gas_left) => {
 					return (
@@ -283,12 +287,12 @@ impl Vm for Ssvm {
 					origin: params.origin,
 					gas_price: params.gas_price,
 				};
-				let host_context = HostContext {
+				let mut host_context = HostContext {
 					context: runtime_context,
 					ext: ext,
 				};
 				let (output, gas_left, status_code) = _vm.execute(
-					Box::new(host_context),
+					&mut host_context,
 					evmc_types::Revision::EVMC_BYZANTIUM,
 					evmc_types::CallKind::EVMC_CALL,
 					false,
@@ -304,7 +308,6 @@ impl Vm for Ssvm {
 				println!("Output:  {:?}", hex::encode(output));
 				println!("GasLeft: {:?}", gas_left);
 				println!("Status:  {:?}", status_code);
-
 				_vm.destroy();
 			}
 			Err(e) => println!("Error load wasm file: {:?}, {:?}", file_path, e),
