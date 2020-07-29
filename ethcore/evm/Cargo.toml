@@ -12,7 +12,7 @@ log = "0.3"
 vm = { path = "../vm" }
 keccak-hash = { path = "../../util/hash" }
 memory-cache = { path = "../../util/memory_cache" }
-evmc-client = { git = "https://github.com/second-state/evmc", tag = "v6.3.1-rust-evmc-client-rc.2" }
+evmc-client = { git = "https://github.com/second-state/evmc", tag = "v6.3.1-rust-evmc-client-rc.3" }
 
 [dev-dependencies]
 rustc-hex = "1.0"

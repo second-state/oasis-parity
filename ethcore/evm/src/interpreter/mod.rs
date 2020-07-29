@@ -204,6 +204,7 @@ impl HostInterface for HostContext {
 		gas: i64,
 		_depth: i32,
 		is_static: bool,
+		salt: &evmc_types::Bytes32,
 	) -> (Vec<u8>, i64, evmc_types::Address, evmc_types::StatusCode) {
 		println!("Host: call");
 
@@ -227,7 +228,11 @@ impl HostInterface for HostContext {
 				&U256::from(gas),
 				&U256::from(value),
 				contract_code,
-				CreateContractAddress::FromSenderAndNonce,
+				if kind == evmc_types::CallKind::EVMC_CREATE {
+					CreateContractAddress::FromSenderAndNonce
+				} else {
+					CreateContractAddress::FromSenderSaltAndCodeHash(H256::from_slice(salt))
+				},
 			);
 
 			match result {
