@@ -279,6 +279,7 @@ impl<Cost: CostType> Interpreter<Cost> {
 				|| instruction == instructions::SAR)
 				&& !schedule.have_bitwise_shifting)
 		{
+            eprintln!("Debug: verify_instruction() BadInstruction");
 			return Err(vm::Error::BadInstruction {
 				instruction: instruction,
 			});
@@ -360,10 +361,14 @@ impl<Cost: CostType> Interpreter<Cost> {
 				// ignore
 			}
 			instructions::CREATE | instructions::CREATE2 => {
+                if instruction == instructions::CREATE2 {
+                    eprintln!("Debug: exec_instruction() get CREATE2");
+                }
 				let endowment = stack.pop_back();
 				let address_scheme = match instruction {
 					instructions::CREATE => CreateContractAddress::FromSenderAndNonce,
 					instructions::CREATE2 => {
+                        eprintln!("Debug: exec_instruction() CREATE2");
 						CreateContractAddress::FromSenderSaltAndCodeHash(stack.pop_back().into())
 					}
 					_ => unreachable!("instruction can only be CREATE/CREATE2 checked above; qed"),
@@ -389,6 +394,7 @@ impl<Cost: CostType> Interpreter<Cost> {
 
 				let contract_code = self.mem.read_slice(init_off, init_size);
 
+                eprintln!("Debug: exec_instruction() call ext.create");
 				let create_result = ext.create(
 					&create_gas.as_u256(),
 					&endowment,
@@ -397,12 +403,14 @@ impl<Cost: CostType> Interpreter<Cost> {
 				);
 				return match create_result {
 					ContractCreateResult::Created(address, gas_left) => {
+                        eprintln!("Debug: exec_instruction() call ext.create done");
 						stack.push(address_to_u256(address));
 						Ok(InstructionResult::UnusedGas(
 							Cost::from_u256(gas_left).expect("Gas left cannot be greater."),
 						))
 					}
 					ContractCreateResult::Reverted(gas_left, return_data) => {
+                        eprintln!("Debug: exec_instruction() call ext.create revert");
 						stack.push(U256::zero());
 						self.return_data = return_data;
 						Ok(InstructionResult::UnusedGas(
@@ -410,6 +418,7 @@ impl<Cost: CostType> Interpreter<Cost> {
 						))
 					}
 					ContractCreateResult::Failed => {
+                        eprintln!("Debug: exec_instruction() call ext.create failed");
 						stack.push(U256::zero());
 						Ok(InstructionResult::Ok)
 					}

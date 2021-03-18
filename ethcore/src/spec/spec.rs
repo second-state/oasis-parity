@@ -150,9 +150,13 @@ pub struct CommonParams {
 impl CommonParams {
 	/// Schedule for an EVM in the post-EIP-150-era of the Ethereum main net.
 	pub fn schedule(&self, block_number: u64) -> ::vm::Schedule {
+        eprintln!("Debug: schedule() block number {}", block_number);
+        eprintln!("Debug: schedule() eip150_transition? {}", self.eip150_transition);
 		if block_number < self.eip150_transition {
+            eprintln!("Debug: schedule() new homestead");
 			::vm::Schedule::new_homestead()
 		} else {
+            eprintln!("Debug: schedule() new post_eip150");
 			let max_code_size = self.max_code_size(block_number);
 			let mut schedule = ::vm::Schedule::new_post_eip150(
 				max_code_size as _,
@@ -161,7 +165,9 @@ impl CommonParams {
 				block_number >= self.eip161d_transition,
 			);
 
+            eprintln!("Debug: schedule() call update_schedule");
 			self.update_schedule(block_number, &mut schedule);
+            eprintln!("Debug: schedule() call update_schedule..done");
 			schedule
 		}
 	}
@@ -177,6 +183,8 @@ impl CommonParams {
 
 	/// Apply common spec config parameters to the schedule.
 	pub fn update_schedule(&self, block_number: u64, schedule: &mut ::vm::Schedule) {
+        eprintln!("Debug: update_schedule() block number {}", block_number);
+        eprintln!("Debug: update_schedule() have_create2? {}", schedule.have_create2);
 		schedule.have_create2 = true;
 		schedule.have_revert = block_number >= self.eip140_transition;
 		schedule.have_static_call = block_number >= self.eip214_transition;
@@ -194,6 +202,8 @@ impl CommonParams {
 		if block_number >= self.wasm_activation_transition {
 			schedule.wasm = Some(Default::default());
 		}
+        eprintln!("Debug: update_schedule() block number {}", block_number);
+        eprintln!("Debug: update_schedule() have_create2? {}", schedule.have_create2);
 	}
 
 	/// Whether these params contain any bug-fix hard forks.
